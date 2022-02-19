@@ -45,8 +45,9 @@ nc_skip_header()
 nc_get()
 {
 	domain="$1"
-	timeout="$2"
-	unix2dos <<EOF | nc "$domain" -w "$timeout" | nc_skip_header
+	port="$2"
+	timeout="$3"
+	unix2dos <<EOF | nc -w "$timeout" "$domain" "$port" | nc_skip_header
 GET / HTTP/1.1
 Host: $domain
 User-Agent: curl/7.74.0
@@ -58,9 +59,10 @@ EOF
 nc_post()
 {
 	domain="$1"
-	path="$2"
-	timeout="$3"
-	body="$4"
+	port="$2"
+	path="$3"
+	timeout="$4"
+	body="$5"
 
 	{
 		unix2dos <<EOF
@@ -73,7 +75,7 @@ Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 
 EOF
 		printf '%s' "$body"
-	} | nc "$domain" -w "$timeout" | nc_skip_header
+	} | nc -w "$timeout" "$domain" "$port" | nc_skip_header
 }
 
 login()
@@ -81,7 +83,7 @@ login()
 	username="$1"
 	password="$2"
 
-	resp=$(nc_get "www.baidu.com:80" 10)
+	resp=$(nc_get "www.baidu.com" 80 10)
 
 	[ -z "$resp" ] && die "baidu boom!"
 
@@ -99,7 +101,10 @@ login()
 
 	body="userId=$username&password=$password&service=&queryString=$query_string&passwordEncrypt=false"
 
-	resp=$(nc_post "$portal_ip" "/eportal/InterFace.do?method=login" 10 "$body")
+	post_ip=$(printf '%s' "$portal_ip" | sed 's/:.*//')
+	post_port=$(printf '%s' "$portal_ip" | sed 's/.*://')
+
+	resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" 10 "$body")
 
 	echo "login resp: $resp"
 
