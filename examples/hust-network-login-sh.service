@@ -1,0 +1,14 @@
+[Unit]
+Description=HUST Network Login
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/bin/hust-network-login-sh /etc/hust-network-login-sh/conf
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
