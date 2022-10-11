@@ -85,7 +85,10 @@ login()
 
 	resp=$(nc_get "www.baidu.com" 80 10)
 
-	[ -z "$resp" ] && die "baidu boom!"
+    if [ -z "$resp" ]; then
+        echo "baidu boom!"
+        return 1
+    fi
 
 	if ! printf '%s' "$resp" | grep -q '/eportal/index.jsp'; then
 		return 0
@@ -122,10 +125,10 @@ main()
 
 	while :; do
 		if login "$username" "$password"; then
-			echo "login ok. awaiting..."
+			echo "[$(date)] login ok. awaiting..."
 			sleep 15
 		else
-			echo "error!"
+			echo "[$(date)] error!"
 			sleep 1
 		fi
 	done
