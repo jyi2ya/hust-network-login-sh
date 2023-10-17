@@ -38,3 +38,9 @@ cp src/main.sh ./hust-network-login-sh
 ## 依赖
 
 `nc` `unix2dos` `awk` `grep` `printf` `sed` `sleep` 以及一个 POSIX 兼容的 `sh`。
+
+## 相似项目
+
+* 项目起源：[hust-network-login](https://github.com/black-binary/hust-network-login)
+* 面向基于 busybox 的路由器的版本：[hust-network-login-sh](https://github.com/jyi2ya/hust-network-login-sh)
+* 面向 MCU arduino 的嵌入式的版本：[hust-network-login-esp](https://github.com/vaaandark/hust-network-login-esp)
