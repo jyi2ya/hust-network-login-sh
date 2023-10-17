@@ -4,6 +4,19 @@ LC_ALL=C
 LANG=C
 export LC_ALL LANG
 
+info() {
+    echo "[$(date)]" "$@" >&2
+}
+
+enc() {
+    enc_text="$1"
+    enc_c=$(printf '%s' "$enc_text" | od -An -t x1 -w1 -v | tr -d '\n ' | tr '[:lower:]' '[:upper:]')
+    enc_e=10001
+    enc_n=94DD2A8675FB779E6B9F7103698634CD400F27A154AFA67AF6166A43FC26417222A79506D34CACC7641946ABDA1785B7ACF9910AD6A0978C91EC84D40B71D2891379AF19FFB333E7517E390BD26AC312FE940C340466B4A5D4AF1D65C3B5944078F96A1A51A5A53E4BC302818B7C9F63C4A1B07BD7D874CEF1C3D4B2F5EB7871
+    enc_result=$(printf 'scale=0; obase=16; ibase=16; (%s ^ %s) %% %s\n' "$enc_c" "$enc_e" "$enc_n" | BC_LINE_LENGTH=0 bc -q)
+    printf '%256s' "$enc_result" | tr '[:upper:]' '[:lower:]' | tr ' ' '0'
+}
+
 urlencode()
 {
 	printf '%s' "$1" | sed 's/./&\n/g' | while read -r char; do
@@ -70,7 +83,7 @@ POST $path HTTP/1.1
 Host: $domain
 Accept: */*
 User-Agent: hust-network-login
-Content-Length: 534
+Content-Length: ${#body}
 Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 
 EOF
@@ -86,7 +99,7 @@ login()
 	resp=$(nc_get "www.baidu.com" 80 10)
 
     if [ -z "$resp" ]; then
-        echo "baidu boom!"
+        info "baidu boom!"
         return 1
     fi
 
@@ -95,21 +108,28 @@ login()
 	fi
 
 	portal_ip=$(printf '%s' "$resp" | sed 's#^[^/]*//\([^/]*\).*$#\1#')
-	echo "portal ip: $portal_ip"
+	info "portal ip: $portal_ip"
 
-	query_string=$(printf '%s' "$resp" | sed "s#.*index.jsp?\([^']*\).*#\1#")
-       	echo "query_string: $query_string"
+    mac=$(printf '%s' "$resp" | sed 's#.*mac=\([^&][^&]*\).*#\1#')
+	info "mac: $mac"
+
+    info "encrypting password, may take a long time"
+    encrypt_pass=$(enc "$password>$mac")
+    info "encrypt done"
+
+    query_string=$(printf '%s' "$resp" | sed "s#.*index.jsp?\([^']*\).*#\1#")
+    info "query_string: $query_string"
 
 	query_string=$(urlencode "$query_string")
 
-	body="userId=$username&password=$password&service=&queryString=$query_string&passwordEncrypt=false"
+	body="userId=$username&password=$encrypt_pass&service=&queryString=$query_string&passwordEncrypt=true"
 
 	post_ip=$(printf '%s' "$portal_ip" | sed 's/:.*//')
 	post_port=$(printf '%s' "$portal_ip" | sed 's/.*://')
 
 	resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" 10 "$body")
 
-	echo "login resp: $resp"
+	info "login resp: $resp"
 
 	if printf '%s' "$resp" | grep -q 'success'; then
 		return 0
@@ -125,10 +145,10 @@ main()
 
 	while :; do
 		if login "$username" "$password"; then
-			echo "[$(date)] login ok. awaiting..."
+			info "login ok. awaiting..."
 			sleep 15
 		else
-			echo "[$(date)] error!"
+			info "error!"
 			sleep 1
 		fi
 	done
