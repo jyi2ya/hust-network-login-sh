@@ -2,7 +2,8 @@
 
 # HUST-Network-Login-sh
 
-极简主义的华中科技大学校园网络认证工具，支持有线和无线网络。下载即用，大小约为 2.1k，有依赖。为路由器等嵌入式设备开发，支持所有带 posix shell 和 unix2dos、nc 等工具的主流硬件软件平台。No Python, Has Dependencies, Is Bullshit.
+极简主义的华中科技大学校园网络认证工具，支持有线和无线网络。下载即用，大小约为 2.1k，有依赖。为路由器等嵌入式设备开发，支持所有带
+posix shell 和 unix2dos、nc 等工具的主流硬件软件平台。No Python, Has Dependencies, Is Bullshit.
 
 ## 使用
 
@@ -37,7 +38,26 @@ cp src/main.sh ./hust-network-login-sh
 
 ## 依赖
 
-`nc` `unix2dos` `awk` `grep` `printf` `sed` `sleep` 以及一个 POSIX 兼容的 `sh`。
+`nc` `unix2dos` `awk` `grep` `printf` `sed` `sleep` `od` `bc` 以及一个 POSIX 兼容的 `sh`。
+
+如果你的 shell 没有 `od` 与 `bc`，也可使用加密完成后的密码
+
+## 加密密码获取方式
+
+在校园网登录时勾选记住密码，下次登录时密码框会默认填充加密后的密码，浏览器中按下 `F12`
+打开开发者工具，选择密码框的 `<input>` 标签，双击 `type="password"` 将其修改为 `type="text"` 即可显示加密后的密码，直接复制粘贴到配置文件中即可
+
+![f12.png](imgs/f12.png)
+
+或者在控制台直接输入
+
+```js
+document.querySelector("#pwd").value
+```
+
+即可输出加密后密码（截图中密码已作处理）
+
+![img.png](imgs/console.png)
 
 ## 相似项目
 

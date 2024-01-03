@@ -79,8 +79,7 @@ nc_get()
 {
 	domain="$1"
 	port="$2"
-	timeout="$3"
-	unix2dos <<EOF | nc -w "$timeout" "$domain" "$port" | nc_skip_header
+	unix2dos <<EOF | nc "$domain" "$port" | nc_skip_header
 GET / HTTP/1.1
 Host: $domain
 User-Agent: curl/7.74.0
@@ -94,8 +93,7 @@ nc_post()
 	domain="$1"
 	port="$2"
 	path="$3"
-	timeout="$4"
-	body="$5"
+	body="$4"
 
 	{
 		unix2dos <<EOF
@@ -108,7 +106,7 @@ Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 
 EOF
 		printf '%s' "$body"
-	} | nc -w "$timeout" "$domain" "$port" | nc_skip_header
+	} | nc "$domain" "$port" | nc_skip_header
 }
 
 login()
@@ -116,7 +114,7 @@ login()
 	username="$1"
 	password="$2"
 
-	resp=$(nc_get "www.baidu.com" 80 10)
+	resp=$(nc_get "www.baidu.com" 80)
 
     if [ -z "$resp" ]; then
         info "baidu boom!"
@@ -133,9 +131,15 @@ login()
     mac=$(printf '%s' "$resp" | sed 's#.*mac=\([^&][^&]*\).*#\1#')
 	info "mac: $mac"
 
-    info "encrypting password, may take a long time"
+  if [ "${#password}" -eq 256 ]; then
+	  # Skip encrypt
+	  info "Skip encrypt"
+	  encrypt_pass=$password
+  else
+	  info "encrypting password, may take a long time"
     encrypt_pass=$(enc "$password>$mac")
     info "encrypt done"
+  fi
 
     query_string=$(printf '%s' "$resp" | sed "s#.*index.jsp?\([^']*\).*#\1#")
     info "query_string: $query_string"
@@ -147,7 +151,7 @@ login()
 	post_ip=$(printf '%s' "$portal_ip" | sed 's/:.*//')
 	post_port=$(printf '%s' "$portal_ip" | sed 's/.*://')
 
-	resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" 10 "$body")
+	resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" "$body")
 
 	info "login resp: $resp"
 
