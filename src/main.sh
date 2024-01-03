@@ -93,7 +93,7 @@ nc_post()
 	domain="$1"
 	port="$2"
 	path="$3"
-	body="$5"
+	body="$4"
 
 	{
 		unix2dos <<EOF
