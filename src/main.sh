@@ -39,47 +39,47 @@ EOF
 
 urlencode()
 {
-	printf '%s' "$1" | sed 's/./&\n/g' | while read -r char; do
-		case "$char" in
-			[a-zA-Z0-9.~_-]) printf '%s' "$char" ;;
-			*) printf '%%%02X' "'$char" ;;
-		esac
-	done
+    printf '%s' "$1" | sed 's/./&\n/g' | while read -r char; do
+        case "$char" in
+            [a-zA-Z0-9.~_-]) printf '%s' "$char" ;;
+            *) printf '%%%02X' "'$char" ;;
+        esac
+    done
 }
 
 die()
 {
-	err="$2"
-	[ -z "$err" ] && err=1
-	printf "%s\n" "$1"
-	exit "$err"
+    err="$2"
+    [ -z "$err" ] && err=1
+    printf "%s\n" "$1"
+    exit "$err"
 }
 
 check_cmd()
 {
-	fail=""
-	for cmd in nc unix2dos awk grep printf sed sleep; do
-		if ! command -v "$cmd" >/dev/null; then
-			echo "Cannot find command: $cmd"
-			fail=y
-		fi
-	done
-	[ -z "$fail" ] || die "Util(s) missing"
+    fail=""
+    for cmd in nc unix2dos awk grep printf sed sleep; do
+        if ! command -v "$cmd" >/dev/null; then
+            echo "Cannot find command: $cmd"
+            fail=y
+        fi
+    done
+    [ -z "$fail" ] || die "Util(s) missing"
 }
 
 nc_skip_header()
 {
-	awk '
-		header_finished { print }
-		/^\r$/ { header_finished = 1 }
-	'
+    awk '
+        header_finished { print }
+        /^\r$/ { header_finished = 1 }
+    '
 }
 
 nc_get()
 {
-	domain="$1"
-	port="$2"
-	unix2dos <<EOF | nc "$domain" "$port" | nc_skip_header
+    domain="$1"
+    port="$2"
+    unix2dos <<EOF | nc "$domain" "$port" | nc_skip_header
 GET / HTTP/1.1
 Host: $domain
 User-Agent: curl/7.74.0
@@ -90,13 +90,13 @@ EOF
 
 nc_post()
 {
-	domain="$1"
-	port="$2"
-	path="$3"
-	body="$4"
+    domain="$1"
+    port="$2"
+    path="$3"
+    body="$4"
 
-	{
-		unix2dos <<EOF
+    {
+        unix2dos <<EOF
 POST $path HTTP/1.1
 Host: $domain
 Accept: */*
@@ -105,77 +105,77 @@ Content-Length: ${#body}
 Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 
 EOF
-		printf '%s' "$body"
-	} | nc "$domain" "$port" | nc_skip_header
+        printf '%s' "$body"
+    } | nc "$domain" "$port" | nc_skip_header
 }
 
 login()
 {
-	username="$1"
-	password="$2"
+    username="$1"
+    password="$2"
 
-	resp=$(nc_get "www.baidu.com" 80)
+    resp=$(nc_get "www.baidu.com" 80)
 
     if [ -z "$resp" ]; then
         info "baidu boom!"
         return 1
     fi
 
-	if ! printf '%s' "$resp" | grep -q '/eportal/index.jsp'; then
-		return 0
-	fi
+    if ! printf '%s' "$resp" | grep -q '/eportal/index.jsp'; then
+        return 0
+    fi
 
-	portal_ip=$(printf '%s' "$resp" | sed 's#^[^/]*//\([^/]*\).*$#\1#')
-	info "portal ip: $portal_ip"
+    portal_ip=$(printf '%s' "$resp" | sed 's#^[^/]*//\([^/]*\).*$#\1#')
+    info "portal ip: $portal_ip"
 
     mac=$(printf '%s' "$resp" | sed 's#.*mac=\([^&][^&]*\).*#\1#')
-	info "mac: $mac"
+    info "mac: $mac"
 
   if [ "${#password}" -eq 256 ]; then
-	  # Skip encrypt
-	  info "Skip encrypt"
-	  encrypt_pass=$password
+      # Skip encrypt
+      info "Skip encrypt"
+      encrypt_pass=$password
   else
-	  info "encrypting password, may take a long time"
-    encrypt_pass=$(enc "$password>$mac")
-    info "encrypt done"
+      info "encrypting password, may take a long time"
+      encrypt_pass=$(enc "$password>$mac")
+      info "encrypt done"
   fi
 
-    query_string=$(printf '%s' "$resp" | sed "s#.*index.jsp?\([^']*\).*#\1#")
-    info "query_string: $query_string"
+  query_string=$(printf '%s' "$resp" | sed "s|.*index.jsp?\([^']*\).*|\1|")
+  info "query_string: $query_string"
 
-	query_string=$(urlencode "$query_string")
+  query_string=$(urlencode "$query_string")
 
-	body="userId=$username&password=$encrypt_pass&service=&queryString=$query_string&passwordEncrypt=true"
+  body="userId=$username&password=$encrypt_pass&service=&queryString=$query_string&passwordEncrypt=true"
 
-	post_ip=$(printf '%s' "$portal_ip" | sed 's/:.*//')
-	post_port=$(printf '%s' "$portal_ip" | sed 's/.*://')
+  post_ip=$(printf '%s' "$portal_ip" | sed 's/:.*//')
+  post_port=$(printf '%s' "$portal_ip" | sed 's/.*://')
 
-	resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" "$body")
+  resp=$(nc_post "$post_ip" "$post_port" "/eportal/InterFace.do?method=login" "$body")
 
-	info "login resp: $resp"
+  info "login resp: $resp"
 
-	if printf '%s' "$resp" | grep -q 'success'; then
-		return 0
-	else
-		return 1
-	fi
+  if printf '%s' "$resp" | grep -q 'success'; then
+      return 0
+  else
+      return 1
+  fi
 }
 
 main()
 {
-	read -r username
-	read -r password
+    read -r username
+    read -r password
 
-	while :; do
-		if login "$username" "$password"; then
-			info "login ok. awaiting..."
-			sleep 15
-		else
-			info "error!"
-			sleep 1
-		fi
-	done
+    while :; do
+        if login "$username" "$password"; then
+            info "login ok. awaiting..."
+            sleep 15
+        else
+            info "error!"
+            sleep 1
+        fi
+    done
 }
 
 check_cmd
