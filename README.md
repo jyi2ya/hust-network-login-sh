@@ -59,6 +59,18 @@ document.querySelector("#pwd").value
 
 ![img.png](imgs/console.png)
 
+或者也可以使用我们提供的密码加密脚本，./scripts/encrypt.sh。
+
+假设你的密码是 mypassword，你可以这么用它：
+
+```plain
+jyi-station 17:58 (master) ~/dev/hust-network-login-sh
+0 ./scripts/encrypt.sh mypassword
+26893ab982eba6463f1e8096c01acd779577b9e0d20a8473ffdae1a96b5c9c076df332cc55b22cacc29aade2a38a749a6a9a1e11a4dbee2849f5ca17a7f61d7338beaebe4f14b732e4245086c48cbc247a4e6e28d12febdafd4d7d07535ebd6e43d0562903a3ec15f1c91ec573a2b33cd2c0d8606995c9cc7a90ee9867b91323
+```
+
+脚本的输出即为加密后的密码。
+
 ## 相似项目
 
 * 项目起源：[hust-network-login](https://github.com/black-binary/hust-network-login)
