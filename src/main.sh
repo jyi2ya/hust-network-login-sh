@@ -131,9 +131,15 @@ login()
     mac=$(printf '%s' "$resp" | sed 's#.*mac=\([^&][^&]*\).*#\1#')
 	info "mac: $mac"
 
-    info "encrypting password, may take a long time"
+  if [ "${#password}" -eq 256 ]; then
+	  # Skip encrypt
+	  info "Skip encrypt"
+	  encrypt_pass=$password
+  else
+	  info "encrypting password, may take a long time"
     encrypt_pass=$(enc "$password>$mac")
     info "encrypt done"
+  fi
 
     query_string=$(printf '%s' "$resp" | sed "s#.*index.jsp?\([^']*\).*#\1#")
     info "query_string: $query_string"
